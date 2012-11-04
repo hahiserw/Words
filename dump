@@ -2,7 +2,13 @@
 
 tmp=/tmp/dict_parse
 
-word="$1"
+debug=
+if [ $# -gt 1 ]; then
+	debug=true
+	word="$2"
+else
+ 	word="$1"
+fi
 
 getnr() {
 	while read line; do
@@ -11,12 +17,20 @@ getnr() {
 	done
 }
 
-cols=`tput cols`
+cols=$COLUMNS
+if [ -z "$cols" ]; then
+	cols=`tput cols`
+fi
 if [ ! -z "$cols" ]; then
 	width="-width=$cols"
 fi
 
-lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g' > $tmp
+if [ "x" = "x$debug" ]; then
+	lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g' > $tmp
+else
+	echo "Width parameter: $width"
+	lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g'
+fi
 
 start=`cat $tmp | grep -n 'Słownik angielsko-polski' | getnr`
 stop=`cat $tmp | grep -n 'przykłady użycia w kontekście' | getnr`
@@ -24,11 +38,17 @@ if [ -z "$stop" ]; then
 	stop=`cat $tmp | grep -n 'nauczyło się tego słówka w szkole angielskiego eTutor' | getnr`
 	if [ -z "$stop" ]; then
 		stop=`cat $tmp | grep -n 'zapamiętały to słowo w serwisie eTutor' | getnr`
+		if [ -z "$stop" ]; then
+			stop=`cat $tmp | grep -n 'Słownik Diki to najlepszy serwis edukacyjny' | getnr`
+		fi
 	fi
 fi
 
 if [ -z "$start" -o -z "$stop" ]; then
-	echo "Cannot find definitions in data file for word '$1'"
+	echo "Cannot find definitions in data file for word '$word'"
+	if [ ! -z "$debug" ]; then
+		echo "Lines from $start to $stop."
+	fi
 	exit 1
 fi
 

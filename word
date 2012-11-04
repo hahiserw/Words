@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 here=`dirname $0`
-source settings
+source $here/settings
 
 debug=
 
 
 info() {
-	if [ "x$debug" = "x" ]; then
+	if [ debug ]; then
 		return
 	fi
 	echo $@
