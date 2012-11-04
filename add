@@ -1,6 +1,8 @@
 #!/bin/sh
 
-dict=/home/hahi/Documents/words/english
+here=`dirname $0`
+source settings
+
 
 help() {
 	# echo "Usage: $0 [word]..."
@@ -12,12 +14,11 @@ help() {
 }
 
 backup() {
-	cp $dict $dict~
+	cp $dictionary $dictionary~
 }
 
 check_and_backup() {
-	return 0
-	if [ ! -w $dict ]; then
+	if [ ! -w $dictionary ]; then
 		echo "Dictionary file does not exist or is not writable!"
 		return 1
 	fi
@@ -26,10 +27,9 @@ check_and_backup() {
 }
 
 add_word() {
-	check=`grep "$1" $dict`
+	check=`grep "$1" $dictionary`
 	if [ -z "$check" ]; then
-		echo $1 >> $dict
-		# echo Adding $1
+		echo $1 >> $dictionary
 	else
 		echo "Word '$1' is already in dictionary."
 	fi
