@@ -1,0 +1,113 @@
+#!/bin/sh
+
+# here=`dirname $0`
+# source $here/words_add
+# source $here/words_dump
+
+debug=
+dictionary=/home/hahi/Documents/words/english #/var/word.dict
+next=/tmp/word.next
+data=/home/hahi/Documents/words/htmls
+
+
+info() {
+	if [ "x$debug" = "x" ]; then
+		return
+	fi
+	echo $@
+}
+
+help() {
+	echo "Usage: $0 [-v] [help|shuffle|add [word]...]"
+	echo "By default shows word and its translation from dictionary file every time script"
+	echo "is called. It will increment pointer after showing word. When all words"
+	echo "has been shown the dictionary file will be shuffled."
+	echo "If you want more verbosity output add '-v' before other parameters."
+	echo
+	echo "Available commands:"
+	echo "  help     " "Shows this helpful description"
+	echo "  add      " "Adds a word(s) to the dictionary and retrieves its translation(s)"
+	echo "           " "Type add without parameters more informations"
+	echo "  shuffle  " "Shuffles entire dictionary file"
+	echo "  retrieve " "Get all missing translations from internet"
+}
+
+shuffle() {
+	info "Shuffling dictionary file."
+	info "Previous version of dictionary file is stored under $dictionary.prev."
+	cp $dictionary $dictionary.prev
+	sort -R $dictionary.prev -o $dictionary
+}
+
+show_and_increment_pointer() {
+	if [ -e $next ]; then
+		nr=`cat $next`
+		if [ -z "$nr" ]; then
+			info "No data in pointer file, correcting."
+			nr=1
+		elif [ $((nr)) -le 0 ]; then
+			info "Something wrong with pointer file, correcting."
+			# exit 1
+			nr=1
+		fi
+	else
+		info "Creating pointer file."
+		# echo 1 > $next
+		nr=1
+	fi
+	
+	info "Your word (#$nr) is:"
+	word=`head -$nr $dictionary | tail -1`
+
+	./dump "$data/$word.html"
+
+	total=`wc -l $dictionary | cut -d' ' -f1`
+	if [ $((nr)) -ge $((total)) ]; then
+		info "All words has been shown."
+		shuffle
+		info "Reseting pointer."
+		echo 1 > $next
+	else
+		info "Incrementing and saving pointer."
+		echo $((nr+1)) > $next
+	fi
+}
+
+add() {
+	info "Adding words: $*"
+	echo "addig word $1"
+}
+
+retrive() {
+	cat $dictionary | while read line; do
+		wget -nc "http://www.diki.pl/slownik-angielskiego/?q=$line" -O "$data/$line.html"
+	done
+	# ls $data | while read line; do
+	# 	./dump "$line" > 
+	# done
+}
+
+while true; do # Or should it be [ $# -gt 0 ] ?
+	case $1 in
+		"-v")
+			debug=true
+			shift
+			continue
+			;;
+		"--help"|"help")
+			help
+			;;
+		"add")
+			shift
+			./add "$@"
+			;;
+		"shuffle")
+			echo "not now"
+			exit 0
+			shuffle
+			;;
+		*)
+			show_and_increment_pointer
+	esac
+	break
+done

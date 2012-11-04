@@ -1,0 +1,34 @@
+#!/bin/sh
+
+tmp=/tmp/dict_parse
+
+word="$1"
+
+getnr() {
+	while read line; do
+		echo $line | sed -r 's/^ *(.+):.+$/\1/'
+		return
+	done
+}
+
+cols=`tput cols`
+if [ ! -z "$cols" ]; then
+	width="-width=$cols"
+fi
+
+lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g' > $tmp
+
+start=`cat $tmp | grep -n 'Słownik angielsko-polski' | getnr`
+stop=`cat $tmp | grep -n 'przykłady użycia w kontekście' | getnr`
+if [ -z "$stop" ]; then
+	stop=`cat $tmp | grep -n 'nauczyło się tego słówka w szkole angielskiego eTutor' | getnr`
+fi
+
+if [ -z "$start" -o -z "$stop" ]; then
+	echo "Cannot find definitions in data file"
+	exit 1
+fi
+
+length=$((stop-start))
+
+cat $tmp | head -$((stop-1)) | tail -$((length-1))

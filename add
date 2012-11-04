@@ -1,0 +1,59 @@
+#!/bin/sh
+
+dict=/home/hahi/Documents/words/english
+
+help() {
+	# echo "Usage: $0 [word]..."
+	echo "Usage: words add [word]..."
+	echo "Adds all words to dictionary file."
+	echo "If word is already there script will skip it."
+	echo "Type - instead of words to make script read from standard input."
+	exit 0
+}
+
+backup() {
+	cp $dict $dict~
+}
+
+check_and_backup() {
+	return 0
+	if [ ! -w $dict ]; then
+		echo "Dictionary file does not exist or is not writable!"
+		return 1
+	fi
+	backup
+	return 0
+}
+
+add_word() {
+	check=`grep "$1" $dict`
+	if [ -z "$check" ]; then
+		# echo $1 >> $dict
+		echo Adding $1
+	else
+		echo "Word '$1' is already in dictionary."
+	fi
+}
+
+read_stdin() {
+	while read word; do
+		add_word "$word"
+	done
+}
+
+read_args() {
+	for word; do
+		add_word "$word"
+	done
+}
+
+case "$1" in
+	"")
+		help
+		;;
+	"-")
+		check_and_backup && read_stdin
+		;;
+	*)
+		check_and_backup && read_args "$@"
+esac
