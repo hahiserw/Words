@@ -28,8 +28,8 @@ check_and_backup() {
 add_word() {
 	check=`grep "$1" $dict`
 	if [ -z "$check" ]; then
-		# echo $1 >> $dict
-		echo Adding $1
+		echo $1 >> $dict
+		# echo Adding $1
 	else
 		echo "Word '$1' is already in dictionary."
 	fi

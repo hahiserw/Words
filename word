@@ -5,9 +5,9 @@
 # source $here/words_dump
 
 debug=
-dictionary=/home/hahi/Documents/words/english #/var/word.dict
-next=/tmp/word.next
-data=/home/hahi/Documents/words/htmls
+dictionary=/home/hahi/Documents/words/english #/var/words/dict
+pointer=/tmp/word.pointer #/var/words/pointer
+data=/home/hahi/Documents/words/htmls #/var/words/data
 
 
 info() {
@@ -37,11 +37,12 @@ shuffle() {
 	info "Previous version of dictionary file is stored under $dictionary.prev."
 	cp $dictionary $dictionary.prev
 	sort -R $dictionary.prev -o $dictionary
+	echo 1 > $pointer
 }
 
 show_and_increment_pointer() {
-	if [ -e $next ]; then
-		nr=`cat $next`
+	if [ -e $pointer ]; then
+		nr=`cat $pointer`
 		if [ -z "$nr" ]; then
 			info "No data in pointer file, correcting."
 			nr=1
@@ -52,40 +53,45 @@ show_and_increment_pointer() {
 		fi
 	else
 		info "Creating pointer file."
-		# echo 1 > $next
+		# echo 1 > $pointer
 		nr=1
 	fi
 	
 	info "Your word (#$nr) is:"
 	word=`head -$nr $dictionary | tail -1`
+	wordfile="$data/$word.html"
 
-	./dump "$data/$word.html"
+	if [ ! -e $wordfile ]; then
+		echo "File with translation missing!"
+		echo "To fix it type: $0 retrieve"
+		exit 1
+	fi
+
+	# Show translation on screen
+	./dump $wordfile
 
 	total=`wc -l $dictionary | cut -d' ' -f1`
 	if [ $((nr)) -ge $((total)) ]; then
 		info "All words has been shown."
 		shuffle
 		info "Reseting pointer."
-		echo 1 > $next
+		echo 1 > $pointer
 	else
 		info "Incrementing and saving pointer."
-		echo $((nr+1)) > $next
+		echo $((nr+1)) > $pointer
 	fi
 }
 
-add() {
-	info "Adding words: $*"
-	echo "addig word $1"
-}
-
-retrive() {
+retrieve() {
 	cat $dictionary | while read line; do
-		wget -nc "http://www.diki.pl/slownik-angielskiego/?q=$line" -O "$data/$line.html"
+		wget -nc "http://www.diki.pl/slownik-angielskiego/?q=$line" -O "$data/$line.html" --quiet \
+		|| "Cannot retrieve '$line'"
 	done
 	# ls $data | while read line; do
 	# 	./dump "$line" > 
 	# done
 }
+
 
 while true; do # Or should it be [ $# -gt 0 ] ?
 	case $1 in
@@ -102,9 +108,10 @@ while true; do # Or should it be [ $# -gt 0 ] ?
 			./add "$@"
 			;;
 		"shuffle")
-			echo "not now"
-			exit 0
 			shuffle
+			;;
+		"retrieve")
+			retrieve
 			;;
 		*)
 			show_and_increment_pointer

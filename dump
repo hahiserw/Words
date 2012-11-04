@@ -22,10 +22,13 @@ start=`cat $tmp | grep -n 'Słownik angielsko-polski' | getnr`
 stop=`cat $tmp | grep -n 'przykłady użycia w kontekście' | getnr`
 if [ -z "$stop" ]; then
 	stop=`cat $tmp | grep -n 'nauczyło się tego słówka w szkole angielskiego eTutor' | getnr`
+	if [ -z "$stop" ]; then
+		stop=`cat $tmp | grep -n 'zapamiętały to słowo w serwisie eTutor' | getnr`
+	fi
 fi
 
 if [ -z "$start" -o -z "$stop" ]; then
-	echo "Cannot find definitions in data file"
+	echo "Cannot find definitions in data file for word '$1'"
 	exit 1
 fi
 
