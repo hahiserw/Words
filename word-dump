@@ -29,17 +29,20 @@ if [ "x" = "x$debug" ]; then
 	lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g' > $tmp
 else
 	echo "Width parameter: $width"
-	lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g'
+	lynx -notitle -hiddenlinks=ignore -nolist -dump $width "$word" | sed -r 's/Dodaj do powtórek w eTutor//g' | tee $tmp
 fi
 
 start=`cat $tmp | grep -n 'Słownik angielsko-polski' | getnr`
 stop=`cat $tmp | grep -n 'przykłady użycia w kontekście' | getnr`
 if [ -z "$stop" ]; then
-	stop=`cat $tmp | grep -n 'nauczyło się tego słówka w szkole angielskiego eTutor' | getnr`
+	stop=`cat $tmp | grep -n 'się tego słówka w szkole angielskiego eTutor' | getnr`
 	if [ -z "$stop" ]; then
-		stop=`cat $tmp | grep -n 'zapamiętały to słowo w serwisie eTutor' | getnr`
+		stop=`cat $tmp | grep -n 'to słowo w serwisie eTutor' | getnr`
 		if [ -z "$stop" ]; then
 			stop=`cat $tmp | grep -n 'Słownik Diki to najlepszy serwis edukacyjny' | getnr`
+			if [ -z "$stop" ]; then
+				stop=`cat $tmp | grep -n 'nauczyło się tego słówka w internetowym kursie eTutor' | getnr`
+			fi
 		fi
 	fi
 fi
@@ -55,3 +58,5 @@ fi
 length=$((stop-start))
 
 cat $tmp | head -$((stop-1)) | tail -$((length-1))
+
+return 0

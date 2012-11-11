@@ -1,13 +1,18 @@
 #!/bin/bash
 
-here=`dirname $0`
-source $here/settings
+config=~/.word/word.conf
+if [ -e $config ]; then
+	source $config
+else
+	echo "Cannot load config file!"
+	exit 1
+fi
 
 debug=
 
 
 info() {
-	if [ debug ]; then
+	if [ -z "$debug" ]; then
 		return
 	fi
 	echo $@
@@ -53,19 +58,28 @@ show_and_increment_pointer() {
 		# echo 1 > $pointer
 		nr=1
 	fi
+
+	info "Position: $nr"
 	
-	info "Your word (#$nr) is:"
 	word=`head -$nr $dictionary | tail -1`
-	wordfile="$data/$word.html"
+	if [ -z "$word" ]; then
+		echo "No words in dictionary."
+		exit 1
+	fi
+
+	info "Your word (#$nr) is:"
+	info $word
+	wordfile="$htmls/$word.html"
 
 	if [ ! -e "$wordfile" ]; then
-		echo "File with translation missing!"
+		echo "File with translation is missing!"
 		echo "To fix it type: $0 retrieve"
 		exit 1
 	fi
 
+	echo
 	# Show translation on screen
-	./dump "$wordfile"
+	word-dump "$wordfile"
 
 	total=`wc -l $dictionary | cut -d' ' -f1`
 	if [ $((nr)) -ge $((total)) ]; then
@@ -81,10 +95,13 @@ show_and_increment_pointer() {
 
 retrieve() {
 	cat $dictionary | while read line; do
-		wget -nc "http://www.diki.pl/slownik-angielskiego/?q=$line" -O "$data/$line.html" --quiet \
-		|| "Cannot retrieve '$line'"
+		if [ -z "$line" ]; then
+			echo "Empty word? WTF?"
+			continue
+		fi
+		wget -nc "http://www.diki.pl/slownik-angielskiego/?q=$line" -O "$htmls/$line.html" -nv
 	done
-	# ls $data | while read line; do
+	# ls $htmls | while read line; do
 	# 	./dump "$line" > 
 	# done
 }
@@ -102,7 +119,7 @@ while true; do # Or should it be [ $# -gt 0 ] ?
 			;;
 		"add")
 			shift
-			./add "$@"
+			word-add "$@"
 			;;
 		"shuffle")
 			shuffle

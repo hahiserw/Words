@@ -1,7 +1,12 @@
 #!/bin/bash
 
-here=`dirname $0`
-source $here/settings
+config=~/.word/word.conf
+if [ -e $config ]; then
+	source $config
+else
+	echo "Cannot load config file!"
+	exit 1
+fi
 
 
 help() {
