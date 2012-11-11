@@ -10,22 +10,22 @@ It's like fortune in slackware.
 What can you do with that?
 --------------------------
 
-- show translation of current pointed word (awesome!)
+Show translation of current pointed word (awesome!)
 
     word
 
-- add words through comman line or stdin (everytime you do that backup is made)
+Add words through comman line or stdin (everytime you do that backup is made)
 
     word add
 
 or
     word add -
 
-- shuffle dictionary (it happens automatically when last word is reached)
+Shuffle dictionary (it happens automatically when last word is reached)
 
     word shuffle
 
-- retrieve translation for every word in your dictionary
+Retrieve translation for every word in your dictionary
 
     word retrieve
 
@@ -48,7 +48,7 @@ And as root:
 
 To remove:
 
-As nomral user:
+As normal user:
 
     $ make clean
 
