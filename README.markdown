@@ -19,6 +19,7 @@ Add words through comman line or stdin (everytime you do that backup is made)
     word add
 
 or
+
     word add -
 
 Shuffle dictionary (it happens automatically when last word is reached)
